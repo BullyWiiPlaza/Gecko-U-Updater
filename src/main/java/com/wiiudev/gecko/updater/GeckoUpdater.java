@@ -1,33 +1,37 @@
 package com.wiiudev.gecko.updater;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class GeckoUpdater
 {
-	public static void downloadFiles() throws InterruptedException, ExecutionException, IOException
+	public static final String DOWNLOADED_FOLDER_NAME = "Downloaded";
+	public static final String COMPUTER_FOLDER_NAME = "Computer";
+	public static final String SD_CARD_FOLDER_NAME = "SD Card";
+
+	public static void downloadFiles() throws Exception
 	{
-		// Firstly, clean up
-		Path wiiUDirectory = Paths.get("SD Card/wiiu");
-		FileUtilities.deleteFolder(wiiUDirectory.toFile());
-		Path computerDirectory = Paths.get("Computer");
-		FileUtilities.deleteFolder(computerDirectory.toFile());
+		Path downloadedDirectory = Paths.get(DOWNLOADED_FOLDER_NAME);
+
+		FileUtilities.deleteFolder(downloadedDirectory.toFile());
 
 		// Create the necessary folders
+		Path computerDirectory = downloadedDirectory.resolve(COMPUTER_FOLDER_NAME);
 		Path jGeckoUDirectory = computerDirectory.resolve("JGecko U");
 		Files.createDirectories(jGeckoUDirectory);
+
+		Path wiiUDirectory = downloadedDirectory.resolve(SD_CARD_FOLDER_NAME + "/wiiu");
 		Path tcpGeckoFolder = wiiUDirectory.resolve("apps/tcpgecko");
 		Files.createDirectories(tcpGeckoFolder);
 
 		int threadPoolSize = Runtime.getRuntime().availableProcessors();
 		ExecutorService pool = Executors.newFixedThreadPool(threadPoolSize);
 		ExecutorCompletionService<String> completionService = new ExecutorCompletionService<>(pool);
+		int submittedTasksCount = 0;
 
 		String sourceRepositoryURL = "https://github.com/BullyWiiPlaza/tcpgecko/";
 		String masterRepositoryURL = sourceRepositoryURL + "blob/master/";
@@ -41,6 +45,8 @@ public class GeckoUpdater
 			return null;
 		});
 
+		submittedTasksCount++;
+
 		completionService.submit(() ->
 		{
 			String iconURL = masterRepositoryURL + "meta/icon.png";
@@ -49,6 +55,8 @@ public class GeckoUpdater
 
 			return null;
 		});
+
+		submittedTasksCount++;
 
 		completionService.submit(() ->
 		{
@@ -59,14 +67,18 @@ public class GeckoUpdater
 			return null;
 		});
 
+		submittedTasksCount++;
+
 		completionService.submit(() ->
 		{
-			String codeHandler = "http://cosmocortney.ddns.net/wiiu_tools/codehandler.bin";
-			Path codeHandlerBinaries = DownloadingUtilities.download(codeHandler);
+			String codeHandler = masterRepositoryURL + "codehandler.bin"; // "http://cosmocortney.ddns.net/wiiu_tools/codehandler.bin";
+			Path codeHandlerBinaries = DownloadingUtilities.downloadRaw(codeHandler);
 			Files.move(codeHandlerBinaries, tcpGeckoFolder.resolve(codeHandlerBinaries));
 
 			return null;
 		});
+
+		submittedTasksCount++;
 
 		completionService.submit(() ->
 		{
@@ -77,7 +89,9 @@ public class GeckoUpdater
 			return null;
 		});
 
-		for (int tasksIndex = 0; tasksIndex < 5; tasksIndex++)
+		submittedTasksCount++;
+
+		for (int tasksIndex = 0; tasksIndex < submittedTasksCount; tasksIndex++)
 		{
 			completionService.take().get();
 		}
