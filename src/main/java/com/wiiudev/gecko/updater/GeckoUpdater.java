@@ -3,9 +3,12 @@ package com.wiiudev.gecko.updater;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class GeckoUpdater
 {
@@ -25,73 +28,90 @@ public class GeckoUpdater
 		Files.createDirectories(jGeckoUDirectory);
 
 		Path wiiUDirectory = downloadedDirectory.resolve(SD_CARD_FOLDER_NAME + "/wiiu");
-		Path tcpGeckoFolder = wiiUDirectory.resolve("apps/tcpgecko");
+		Path appsFolder = wiiUDirectory.resolve("apps");
+		Path tcpGeckoFolder = appsFolder.resolve("tcpgecko");
 		Files.createDirectories(tcpGeckoFolder);
 
-		int threadPoolSize = Runtime.getRuntime().availableProcessors();
+		Runtime runtime = Runtime.getRuntime();
+		int threadPoolSize = runtime.availableProcessors();
 		ExecutorService pool = Executors.newFixedThreadPool(threadPoolSize);
 		ExecutorCompletionService<String> completionService = new ExecutorCompletionService<>(pool);
-		int submittedTasksCount = 0;
+		List<Future<String>> tasks = new ArrayList<>();
 
-		String sourceRepositoryURL = "https://github.com/BullyWiiPlaza/tcpgecko/";
-		String masterRepositoryURL = sourceRepositoryURL + "blob/master/";
+		String tcpGeckoSourceRepositoryURL = "https://github.com/BullyWiiPlaza/tcpgecko/";
+		String tcpGeckoMasterRepositoryURL = tcpGeckoSourceRepositoryURL + "blob/master/";
 
-		completionService.submit(() ->
+		tasks.add(completionService.submit(() ->
+		{
+			String homeBrewLauncherDownloadURL = "https://github.com/dimok789/homebrew_launcher/releases/download/1.4/homebrew_launcher.v1.4.zip";
+			Path downloadedHomeBrewLauncherArchive = DownloadingUtilities.download(homeBrewLauncherDownloadURL);
+			Path sdCardFolder = downloadedDirectory.resolve(SD_CARD_FOLDER_NAME);
+			Files.move(downloadedHomeBrewLauncherArchive, sdCardFolder.resolve(downloadedHomeBrewLauncherArchive));
+			downloadedHomeBrewLauncherArchive = sdCardFolder.resolve(downloadedHomeBrewLauncherArchive);
+			Zipping.extract(downloadedHomeBrewLauncherArchive.toString(), sdCardFolder.toString());
+			Files.delete(downloadedHomeBrewLauncherArchive);
+
+			return null;
+		}));
+
+		tasks.add(completionService.submit(() ->
 		{
 			String jGeckoUURL = "https://github.com/BullyWiiPlaza/JGeckoU/blob/master/JGecko%20U.jar";
 			Path downloadedJGeckoU = DownloadingUtilities.downloadRaw(jGeckoUURL);
 			Files.move(downloadedJGeckoU, jGeckoUDirectory.resolve(downloadedJGeckoU));
 
 			return null;
-		});
+		}));
 
-		submittedTasksCount++;
-
-		completionService.submit(() ->
+		tasks.add(completionService.submit(() ->
 		{
-			String iconURL = masterRepositoryURL + "meta/icon.png";
+			String iconURL = tcpGeckoMasterRepositoryURL + "meta/icon.png";
 			Path iconFile = DownloadingUtilities.downloadRaw(iconURL);
 			Files.move(iconFile, tcpGeckoFolder.resolve(iconFile));
 
 			return null;
-		});
+		}));
 
-		submittedTasksCount++;
-
-		completionService.submit(() ->
+		tasks.add(completionService.submit(() ->
 		{
-			String metaXML = masterRepositoryURL + "meta/meta.xml";
+			String metaXML = tcpGeckoMasterRepositoryURL + "meta/meta.xml";
 			Path metaXMLFilePath = DownloadingUtilities.downloadRaw(metaXML);
 			Files.move(metaXMLFilePath, tcpGeckoFolder.resolve(metaXMLFilePath));
 
 			return null;
-		});
+		}));
 
-		submittedTasksCount++;
-
-		completionService.submit(() ->
+		tasks.add(completionService.submit(() ->
 		{
-			String codeHandler = masterRepositoryURL + "codehandler.bin"; // "http://cosmocortney.ddns.net/wiiu_tools/codehandler.bin";
-			Path codeHandlerBinaries = DownloadingUtilities.downloadRaw(codeHandler);
+			Path codeHandlerBinaries;
+
+			try
+			{
+				// Prioritize CosmoCortney's website because it's the most up-to-date
+				codeHandlerBinaries = DownloadingUtilities.download("http://cosmocortney.ddns.net/wiiu_tools/codehandler.bin");
+			} catch (Exception exception)
+			{
+				// As a fallback use my GitHub
+				codeHandlerBinaries = DownloadingUtilities.downloadRaw(tcpGeckoMasterRepositoryURL + "codehandler.bin");
+			}
+
 			Files.move(codeHandlerBinaries, tcpGeckoFolder.resolve(codeHandlerBinaries));
 
 			return null;
-		});
+		}));
 
-		submittedTasksCount++;
-
-		completionService.submit(() ->
+		tasks.add(completionService.submit(() ->
 		{
-			String tcpGeckoInstaller = masterRepositoryURL + "tcpgecko.elf";
+			String tcpGeckoInstaller = tcpGeckoMasterRepositoryURL + "tcpgecko.elf";
 			Path downloadedTCPGeckoInstaller = DownloadingUtilities.downloadRaw(tcpGeckoInstaller);
 			Files.move(downloadedTCPGeckoInstaller, tcpGeckoFolder.resolve(downloadedTCPGeckoInstaller));
 
 			return null;
-		});
+		}));
 
-		submittedTasksCount++;
-
-		for (int tasksIndex = 0; tasksIndex < submittedTasksCount; tasksIndex++)
+		// Wait for all tasks to finish
+		int tasksCount = tasks.size();
+		for (int tasksIndex = 0; tasksIndex < tasksCount; tasksIndex++)
 		{
 			completionService.take().get();
 		}
