@@ -1,4 +1,4 @@
-package com.wiiudev.gecko.updater;
+package com.wiiudev.gecko.updater.utilities;
 
 import org.apache.commons.io.FilenameUtils;
 

@@ -15,12 +15,21 @@
     </properties>
 
     <dependencies>
+        <!-- Extracting ZIP files -->
         <dependency>
             <groupId>net.lingala.zip4j</groupId>
             <artifactId>zip4j</artifactId>
             <version>LATEST</version>
         </dependency>
 
+        <!-- USB Drive Detection -->
+        <dependency>
+            <groupId>net.samuelcampos</groupId>
+            <artifactId>usbdrivedectector</artifactId>
+            <version>LATEST</version>
+        </dependency>
+
+        <!-- IO + File Name Utilities -->
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>

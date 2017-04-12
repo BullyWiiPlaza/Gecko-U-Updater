@@ -1,5 +1,9 @@
 package com.wiiudev.gecko.updater;
 
+import com.wiiudev.gecko.updater.utilities.DownloadingUtilities;
+import com.wiiudev.gecko.updater.utilities.FileUtilities;
+import com.wiiudev.gecko.updater.utilities.Zipping;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,22 +16,19 @@ import java.util.concurrent.Future;
 
 public class GeckoUpdater
 {
-	public static final String DOWNLOADED_FOLDER_NAME = "Downloaded";
-	public static final String COMPUTER_FOLDER_NAME = "Computer";
-	public static final String SD_CARD_FOLDER_NAME = "SD Card";
+	private static final Path DOWNLOADED_DIRECTORY = Paths.get("Downloaded");
+	private static final Path COMPUTER_DIRECTORY = DOWNLOADED_DIRECTORY.resolve("Computer");
+	public static final Path SD_CARD_DIRECTORY = DOWNLOADED_DIRECTORY.resolve("SD Card");
 
 	public static void downloadFiles() throws Exception
 	{
-		Path downloadedDirectory = Paths.get(DOWNLOADED_FOLDER_NAME);
-
-		FileUtilities.deleteFolder(downloadedDirectory.toFile());
+		FileUtilities.deleteFolder(DOWNLOADED_DIRECTORY.toFile());
 
 		// Create the necessary folders
-		Path computerDirectory = downloadedDirectory.resolve(COMPUTER_FOLDER_NAME);
-		Path jGeckoUDirectory = computerDirectory.resolve("JGecko U");
+		Path jGeckoUDirectory = COMPUTER_DIRECTORY.resolve("JGecko U");
 		Files.createDirectories(jGeckoUDirectory);
 
-		Path wiiUDirectory = downloadedDirectory.resolve(SD_CARD_FOLDER_NAME + "/wiiu");
+		Path wiiUDirectory = SD_CARD_DIRECTORY.resolve("wiiu");
 		Path appsFolder = wiiUDirectory.resolve("apps");
 		Path tcpGeckoFolder = appsFolder.resolve("tcpgecko");
 		Files.createDirectories(tcpGeckoFolder);
@@ -45,10 +46,9 @@ public class GeckoUpdater
 		{
 			String homeBrewLauncherDownloadURL = "https://github.com/dimok789/homebrew_launcher/releases/download/1.4/homebrew_launcher.v1.4.zip";
 			Path downloadedHomeBrewLauncherArchive = DownloadingUtilities.download(homeBrewLauncherDownloadURL);
-			Path sdCardFolder = downloadedDirectory.resolve(SD_CARD_FOLDER_NAME);
-			Files.move(downloadedHomeBrewLauncherArchive, sdCardFolder.resolve(downloadedHomeBrewLauncherArchive));
-			downloadedHomeBrewLauncherArchive = sdCardFolder.resolve(downloadedHomeBrewLauncherArchive);
-			Zipping.extract(downloadedHomeBrewLauncherArchive.toString(), sdCardFolder.toString());
+			Files.move(downloadedHomeBrewLauncherArchive, SD_CARD_DIRECTORY.resolve(downloadedHomeBrewLauncherArchive));
+			downloadedHomeBrewLauncherArchive = SD_CARD_DIRECTORY.resolve(downloadedHomeBrewLauncherArchive);
+			Zipping.extract(downloadedHomeBrewLauncherArchive.toString(), SD_CARD_DIRECTORY.toString());
 			Files.delete(downloadedHomeBrewLauncherArchive);
 
 			return null;
