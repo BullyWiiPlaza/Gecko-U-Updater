@@ -1,9 +1,7 @@
 package com.wiiudev.gecko.updater.swing;
 
 import com.wiiudev.gecko.updater.*;
-import com.wiiudev.gecko.updater.utilities.FileUtilities;
-import com.wiiudev.gecko.updater.utilities.StackTraceUtilities;
-import com.wiiudev.gecko.updater.utilities.WindowUtilities;
+import com.wiiudev.gecko.updater.utilities.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,6 +10,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 public class GeckoUUpdaterGUI extends JFrame
 {
@@ -83,49 +82,104 @@ public class GeckoUUpdaterGUI extends JFrame
 		{
 			Path sourcePath = GeckoUpdater.SD_CARD_DIRECTORY;
 			FileSystemDrive fileSystemDrive = tableManager.getSelectedDrive();
-			Path targetPath = Paths.get(fileSystemDrive.getRoot());
-			final boolean[] processSucceeded = {true};
-			String buttonText = transferButton.getText();
-			transferringFiles = true;
-			transferButton.setText("Transferring...");
+			String root = fileSystemDrive.getRoot();
+			boolean shouldTransfer = reconsiderTransfer(root);
 
-			new SwingWorker<String, String>()
+			if (shouldTransfer)
 			{
-				@Override
-				protected String doInBackground() throws Exception
+				Path targetPath = Paths.get(fileSystemDrive.getRoot());
+				final boolean[] processSucceeded = {true};
+				String buttonText = transferButton.getText();
+				transferringFiles = true;
+				transferButton.setText("Transferring...");
+
+				new SwingWorker<String, String>()
 				{
-					try
+					@Override
+					protected String doInBackground() throws Exception
 					{
-						FileUtilities.copyDirectory(sourcePath, targetPath);
-					} catch (IOException exception)
-					{
-						processSucceeded[0] = false;
-						StackTraceUtilities.handleException(rootPane, exception);
+						try
+						{
+							FileUtilities.copyDirectory(sourcePath, targetPath);
+						} catch (IOException exception)
+						{
+							processSucceeded[0] = false;
+							StackTraceUtilities.handleException(rootPane, exception);
+						}
+
+						return null;
 					}
 
-					return null;
-				}
-
-				@Override
-				protected void done()
-				{
-					if (processSucceeded[0])
+					@Override
+					protected void done()
 					{
-						JOptionPane.showMessageDialog(rootPanel,
-								"Files successfully transferred!",
-								"Success",
-								JOptionPane.INFORMATION_MESSAGE);
-					}
+						if (processSucceeded[0])
+						{
+							JOptionPane.showMessageDialog(rootPanel,
+									"Files successfully transferred!",
+									"Success",
+									JOptionPane.INFORMATION_MESSAGE);
+						}
 
-					transferringFiles = false;
-					transferButton.setText(buttonText);
-				}
-			}.execute();
+						transferringFiles = false;
+						transferButton.setText(buttonText);
+					}
+				}.execute();
+			}
 		});
 
 		informationButton.addActionListener(actionEvent -> visitRepositoryURL());
 
 		startComponentsAvailabilitySetter();
+	}
+
+	private boolean reconsiderTransfer(String root)
+	{
+		if (OperatingSystemUtilities.isWindows())
+		{
+			try
+			{
+				List<WindowsDrivesUtilities.Drive> drives = WindowsDrivesUtilities.getDrives();
+				String forcedFormatting = "FAT32";
+
+				for (WindowsDrivesUtilities.Drive drive : drives)
+				{
+					String currentDriveRoot = drive.root.toString();
+
+					if (currentDriveRoot.equals(root))
+					{
+						String currentFileSystem = drive.fileSystem;
+
+						if (!currentFileSystem.equals(forcedFormatting))
+						{
+							Object[] options = {"Yes", "No"};
+							int selectedOption = JOptionPane.showOptionDialog(this,
+									"Windows has detected that the drive is not formatted as " + forcedFormatting + ".\n" +
+											"The Wii U's SD card has to be formatted as " + forcedFormatting + " to be recognized, therefore this cannot be a Wii U SD card.\n" +
+											"Are you sure you still want to copy the files over?",
+									"Continue?",
+									JOptionPane.YES_NO_CANCEL_OPTION,
+									JOptionPane.QUESTION_MESSAGE,
+									null,
+									options,
+									null);
+
+							if (selectedOption != JOptionPane.YES_OPTION)
+							{
+								return false;
+							}
+						}
+
+						break;
+					}
+				}
+			} catch (Exception exception)
+			{
+				exception.printStackTrace();
+			}
+		}
+
+		return true;
 	}
 
 	private static void visitRepositoryURL()

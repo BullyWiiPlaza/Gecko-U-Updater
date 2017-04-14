@@ -48,14 +48,14 @@ public class DrivesTableManager
 		FileSystemView fileSystemView = FileSystemView.getFileSystemView();
 		File[] roots = File.listRoots();
 
-		USBDeviceDetectorManager manager = new USBDeviceDetectorManager();
-		List<USBStorageDevice> usbStorageDevices = manager.getRemovableDevices();
+		/*USBDeviceDetectorManager manager = new USBDeviceDetectorManager();
+		List<USBStorageDevice> usbStorageDevices = manager.getRemovableDevices();*/
 
 		for (File root : roots)
 		{
 			String displayName = fileSystemView.getSystemDisplayName(root);
 
-			if (!displayName.isEmpty() && isDisplayNameContained(displayName, usbStorageDevices))
+			if (!displayName.isEmpty())
 			{
 				FileSystemDrive drive = new FileSystemDrive(root);
 				fileSystemDrives.add(drive);
@@ -64,7 +64,7 @@ public class DrivesTableManager
 		}
 	}
 
-	private boolean isDisplayNameContained(String displayName, List<USBStorageDevice> usbStorageDevices)
+	/*private boolean isDisplayNameContained(String displayName, List<USBStorageDevice> usbStorageDevices)
 	{
 		for (USBStorageDevice usbStorageDevice : usbStorageDevices)
 		{
@@ -76,7 +76,7 @@ public class DrivesTableManager
 		}
 
 		return false;
-	}
+	}*/
 
 	public FileSystemDrive getSelectedDrive()
 	{
