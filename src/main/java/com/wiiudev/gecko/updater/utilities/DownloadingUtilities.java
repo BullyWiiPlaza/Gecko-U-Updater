@@ -2,6 +2,7 @@ package com.wiiudev.gecko.updater.utilities;
 
 import org.apache.commons.io.FilenameUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -11,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Random;
 
 public class DownloadingUtilities
 {
@@ -26,14 +28,14 @@ public class DownloadingUtilities
 
 		try (InputStream inputStream = website.openStream())
 		{
-			Path downloadedFilePath = Paths.get(fileName);
+			Path downloadedFilePath = Paths.get(RandomStringUtilities.getTemporaryDirectory() + File.separator + fileName);
 			Files.copy(inputStream, downloadedFilePath, StandardCopyOption.REPLACE_EXISTING);
 
 			return downloadedFilePath;
 		}
 	}
 
-	public static String getFileName(String downloadURL) throws UnsupportedEncodingException
+	private static String getFileName(String downloadURL) throws UnsupportedEncodingException
 	{
 		String baseName = FilenameUtils.getBaseName(downloadURL);
 		String extension = FilenameUtils.getExtension(downloadURL);

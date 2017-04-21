@@ -2,8 +2,10 @@ package com.wiiudev.gecko.updater;
 
 import com.wiiudev.gecko.updater.utilities.DownloadingUtilities;
 import com.wiiudev.gecko.updater.utilities.FileUtilities;
+import com.wiiudev.gecko.updater.utilities.ProgramDirectoryUtilities;
 import com.wiiudev.gecko.updater.utilities.Zipping;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,7 +18,7 @@ import java.util.concurrent.Future;
 
 public class GeckoUpdater
 {
-	private static final Path DOWNLOADED_DIRECTORY = Paths.get("Downloaded");
+	private static final Path DOWNLOADED_DIRECTORY = Paths.get(ProgramDirectoryUtilities.getProgramDirectory() + File.separator + "Downloaded");
 	private static final Path COMPUTER_DIRECTORY = DOWNLOADED_DIRECTORY.resolve("Computer");
 	public static final Path SD_CARD_DIRECTORY = DOWNLOADED_DIRECTORY.resolve("SD Card");
 
