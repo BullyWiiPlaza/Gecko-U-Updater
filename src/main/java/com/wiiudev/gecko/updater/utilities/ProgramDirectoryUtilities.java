@@ -48,10 +48,4 @@ public class ProgramDirectoryUtilities
 
 		return null;
 	}
-
-	public static boolean runningFromIntelliJ()
-	{
-		String classPath = System.getProperty("java.class.path");
-		return classPath.contains("IntelliJ IDEA");
-	}
 }

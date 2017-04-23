@@ -60,7 +60,7 @@ public class GeckoUpdater
 		{
 			String jGeckoUURL = "https://github.com/BullyWiiPlaza/JGeckoU/blob/master/JGecko%20U.jar";
 			Path downloadedJGeckoU = DownloadingUtilities.downloadRaw(jGeckoUURL);
-			Files.move(downloadedJGeckoU, jGeckoUDirectory.resolve(downloadedJGeckoU));
+			Files.move(downloadedJGeckoU, jGeckoUDirectory.resolve(downloadedJGeckoU.getFileName()));
 
 			return null;
 		}));
@@ -69,7 +69,7 @@ public class GeckoUpdater
 		{
 			String iconURL = tcpGeckoMasterRepositoryURL + "meta/icon.png";
 			Path iconFile = DownloadingUtilities.downloadRaw(iconURL);
-			Files.move(iconFile, tcpGeckoFolder.resolve(iconFile));
+			Files.move(iconFile, tcpGeckoFolder.resolve(iconFile.getFileName()));
 
 			return null;
 		}));
@@ -78,7 +78,7 @@ public class GeckoUpdater
 		{
 			String metaXML = tcpGeckoMasterRepositoryURL + "meta/meta.xml";
 			Path metaXMLFilePath = DownloadingUtilities.downloadRaw(metaXML);
-			Files.move(metaXMLFilePath, tcpGeckoFolder.resolve(metaXMLFilePath));
+			Files.move(metaXMLFilePath, tcpGeckoFolder.resolve(metaXMLFilePath.getFileName()));
 
 			return null;
 		}));
@@ -97,7 +97,7 @@ public class GeckoUpdater
 				codeHandlerBinaries = DownloadingUtilities.downloadRaw(tcpGeckoMasterRepositoryURL + "codehandler.bin");
 			}
 
-			Files.move(codeHandlerBinaries, tcpGeckoFolder.resolve(codeHandlerBinaries));
+			Files.move(codeHandlerBinaries, tcpGeckoFolder.resolve(codeHandlerBinaries.getFileName()));
 
 			return null;
 		}));
@@ -106,7 +106,7 @@ public class GeckoUpdater
 		{
 			String tcpGeckoInstaller = tcpGeckoMasterRepositoryURL + "tcpgecko.elf";
 			Path downloadedTCPGeckoInstaller = DownloadingUtilities.downloadRaw(tcpGeckoInstaller);
-			Files.move(downloadedTCPGeckoInstaller, tcpGeckoFolder.resolve(downloadedTCPGeckoInstaller));
+			Files.move(downloadedTCPGeckoInstaller, tcpGeckoFolder.resolve(downloadedTCPGeckoInstaller.getFileName()));
 
 			return null;
 		}));
