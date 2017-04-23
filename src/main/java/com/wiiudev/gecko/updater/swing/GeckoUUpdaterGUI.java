@@ -173,9 +173,12 @@ public class GeckoUUpdaterGUI extends JFrame
 						break;
 					}
 				}
-			} catch (Exception exception)
+			} catch (Error error)
 			{
-				exception.printStackTrace();
+				JOptionPane.showMessageDialog(this,
+						"Please keep the DLLs in the same directory as this application for advanced drive detection on Windows.",
+						error.getMessage(),
+						JOptionPane.ERROR_MESSAGE);
 			}
 		}
 
