@@ -83,7 +83,7 @@ public class GeckoUpdater
 			return null;
 		}));
 
-		tasks.add(completionService.submit(() ->
+		/*tasks.add(completionService.submit(() ->
 		{
 			Path codeHandlerBinaries;
 
@@ -100,7 +100,7 @@ public class GeckoUpdater
 			Files.move(codeHandlerBinaries, tcpGeckoFolder.resolve(codeHandlerBinaries.getFileName()));
 
 			return null;
-		}));
+		}));*/
 
 		tasks.add(completionService.submit(() ->
 		{
