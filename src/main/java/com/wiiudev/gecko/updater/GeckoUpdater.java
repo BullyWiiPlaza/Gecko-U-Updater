@@ -9,6 +9,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorCompletionService;
@@ -24,7 +25,7 @@ public class GeckoUpdater
 
 	public static void downloadFiles() throws Exception
 	{
-		FileUtilities.deleteFolder(DOWNLOADED_DIRECTORY.toFile());
+		// FileUtilities.deleteFolder(DOWNLOADED_DIRECTORY.toFile());
 
 		// Create the necessary folders
 		Path jGeckoUDirectory = COMPUTER_DIRECTORY.resolve("JGecko U");
@@ -48,7 +49,7 @@ public class GeckoUpdater
 		{
 			String homeBrewLauncherDownloadURL = "https://github.com/dimok789/homebrew_launcher/releases/download/1.4/homebrew_launcher.v1.4.zip";
 			Path downloadedHomeBrewLauncherArchive = DownloadingUtilities.download(homeBrewLauncherDownloadURL);
-			Files.move(downloadedHomeBrewLauncherArchive, SD_CARD_DIRECTORY.resolve(downloadedHomeBrewLauncherArchive));
+			Files.move(downloadedHomeBrewLauncherArchive, SD_CARD_DIRECTORY.resolve(downloadedHomeBrewLauncherArchive), StandardCopyOption.REPLACE_EXISTING);
 			downloadedHomeBrewLauncherArchive = SD_CARD_DIRECTORY.resolve(downloadedHomeBrewLauncherArchive);
 			Zipping.extract(downloadedHomeBrewLauncherArchive.toString(), SD_CARD_DIRECTORY.toString());
 			Files.delete(downloadedHomeBrewLauncherArchive);
@@ -60,7 +61,7 @@ public class GeckoUpdater
 		{
 			String jGeckoUURL = "https://github.com/BullyWiiPlaza/JGeckoU/blob/master/JGecko%20U.jar";
 			Path downloadedJGeckoU = DownloadingUtilities.downloadRaw(jGeckoUURL);
-			Files.move(downloadedJGeckoU, jGeckoUDirectory.resolve(downloadedJGeckoU.getFileName()));
+			Files.move(downloadedJGeckoU, jGeckoUDirectory.resolve(downloadedJGeckoU.getFileName()), StandardCopyOption.REPLACE_EXISTING);
 
 			return null;
 		}));
@@ -69,7 +70,7 @@ public class GeckoUpdater
 		{
 			String iconURL = tcpGeckoMasterRepositoryURL + "meta/icon.png";
 			Path iconFile = DownloadingUtilities.downloadRaw(iconURL);
-			Files.move(iconFile, tcpGeckoFolder.resolve(iconFile.getFileName()));
+			Files.move(iconFile, tcpGeckoFolder.resolve(iconFile.getFileName()), StandardCopyOption.REPLACE_EXISTING);
 
 			return null;
 		}));
@@ -78,7 +79,7 @@ public class GeckoUpdater
 		{
 			String metaXML = tcpGeckoMasterRepositoryURL + "meta/meta.xml";
 			Path metaXMLFilePath = DownloadingUtilities.downloadRaw(metaXML);
-			Files.move(metaXMLFilePath, tcpGeckoFolder.resolve(metaXMLFilePath.getFileName()));
+			Files.move(metaXMLFilePath, tcpGeckoFolder.resolve(metaXMLFilePath.getFileName()), StandardCopyOption.REPLACE_EXISTING);
 
 			return null;
 		}));
@@ -106,7 +107,7 @@ public class GeckoUpdater
 		{
 			String tcpGeckoInstaller = tcpGeckoMasterRepositoryURL + "tcpgecko.elf";
 			Path downloadedTCPGeckoInstaller = DownloadingUtilities.downloadRaw(tcpGeckoInstaller);
-			Files.move(downloadedTCPGeckoInstaller, tcpGeckoFolder.resolve(downloadedTCPGeckoInstaller.getFileName()));
+			Files.move(downloadedTCPGeckoInstaller, tcpGeckoFolder.resolve(downloadedTCPGeckoInstaller.getFileName()), StandardCopyOption.REPLACE_EXISTING);
 
 			return null;
 		}));
