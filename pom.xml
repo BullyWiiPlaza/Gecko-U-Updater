@@ -35,5 +35,20 @@
             <artifactId>commons-io</artifactId>
             <version>LATEST</version>
         </dependency>
+
+        <!-- SystemUtils -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>LATEST</version>
+        </dependency>
+
+        <!-- var, val, etc. -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>LATEST</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>

@@ -3,13 +3,15 @@ package com.wiiudev.gecko.updater.swing;
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
 
+import static javax.swing.filechooser.FileSystemView.*;
+
 public class FileSystemDrive
 {
-	private static final FileSystemView FILE_SYSTEM_VIEW = FileSystemView.getFileSystemView();
+	private static final FileSystemView FILE_SYSTEM_VIEW = getFileSystemView();
 
 	private File file;
 
-	public FileSystemDrive(File file)
+	FileSystemDrive(File file)
 	{
 		this.file = file;
 	}
@@ -20,12 +22,12 @@ public class FileSystemDrive
 		return FILE_SYSTEM_VIEW.getSystemDisplayName(file);
 	}
 
-	public String getTypeDescription()
+	String getTypeDescription()
 	{
 		return FILE_SYSTEM_VIEW.getSystemTypeDescription(file);
 	}
 
-	public String getRoot()
+	String getRoot()
 	{
 		return file.getAbsolutePath();
 	}

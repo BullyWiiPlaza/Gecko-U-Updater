@@ -1,124 +1,126 @@
 package com.wiiudev.gecko.updater;
 
-import com.wiiudev.gecko.updater.utilities.DownloadingUtilities;
-import com.wiiudev.gecko.updater.utilities.FileUtilities;
-import com.wiiudev.gecko.updater.utilities.ProgramDirectoryUtilities;
-import com.wiiudev.gecko.updater.utilities.Zipping;
+import lombok.val;
+import lombok.var;
 
-import java.io.File;
-import java.nio.file.Files;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import static com.wiiudev.gecko.updater.utilities.DownloadingUtilities.download;
+import static com.wiiudev.gecko.updater.utilities.DownloadingUtilities.downloadRAW;
+import static com.wiiudev.gecko.updater.utilities.ProgramDirectoryUtilities.getProgramDirectory;
+import static com.wiiudev.gecko.updater.utilities.Zipping.extract;
+import static java.io.File.separator;
+import static java.lang.Runtime.getRuntime;
+import static java.nio.file.Files.*;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.util.concurrent.Executors.newFixedThreadPool;
 
 public class GeckoUpdater
 {
-	private static final Path DOWNLOADED_DIRECTORY = Paths.get(ProgramDirectoryUtilities.getProgramDirectory() + File.separator + "Downloaded");
+	private static final Path DOWNLOADED_DIRECTORY = Paths.get(getProgramDirectory() + separator + "Downloaded");
 	private static final Path COMPUTER_DIRECTORY = DOWNLOADED_DIRECTORY.resolve("Computer");
 	public static final Path SD_CARD_DIRECTORY = DOWNLOADED_DIRECTORY.resolve("SD Card");
 
+	private static final String BROWSER_EXPLOIT_PAYLOAD = "https://static.wiidatabase.de/JSTypeHax-Payload.zip";
+	private static final String HOME_BREW_LAUNCHER_DOWNLOAD_URL = "https://github.com/dimok789/homebrew_launcher/releases/download/1.4/homebrew_launcher.v1.4.zip";
+	private static final String J_GECKO_U_URL = "https://github.com/BullyWiiPlaza/JGeckoU/blob/master/JGecko%20U.jar";
+	private static final String TCP_GECKO_MASTER_REPOSITORY_URL = "https://github.com/BullyWiiPlaza/tcpgecko/blob/master/";
+	private static final String ICON_URL = TCP_GECKO_MASTER_REPOSITORY_URL + "meta/icon.png";
+	private static final String META_XML = TCP_GECKO_MASTER_REPOSITORY_URL + "meta/meta.xml";
+	private static final String TCP_GECKO_INSTALLER_URL = TCP_GECKO_MASTER_REPOSITORY_URL + "tcpgecko.elf";
+
 	public static void downloadFiles() throws Exception
 	{
-		// FileUtilities.deleteFolder(DOWNLOADED_DIRECTORY.toFile());
-
 		// Create the necessary folders
-		Path jGeckoUDirectory = COMPUTER_DIRECTORY.resolve("JGecko U");
-		Files.createDirectories(jGeckoUDirectory);
+		val jGeckoUDirectory = COMPUTER_DIRECTORY.resolve("JGecko U");
+		createDirectories(jGeckoUDirectory);
+		val wiiUDirectory = SD_CARD_DIRECTORY.resolve("wiiu");
+		val appsFolder = wiiUDirectory.resolve("apps");
+		val tcpGeckoFolder = appsFolder.resolve("tcpgecko");
+		createDirectories(tcpGeckoFolder);
 
-		Path wiiUDirectory = SD_CARD_DIRECTORY.resolve("wiiu");
-		Path appsFolder = wiiUDirectory.resolve("apps");
-		Path tcpGeckoFolder = appsFolder.resolve("tcpgecko");
-		Files.createDirectories(tcpGeckoFolder);
-
-		Runtime runtime = Runtime.getRuntime();
-		int threadPoolSize = runtime.availableProcessors();
-		ExecutorService pool = Executors.newFixedThreadPool(threadPoolSize);
-		ExecutorCompletionService<String> completionService = new ExecutorCompletionService<>(pool);
-		List<Future<String>> tasks = new ArrayList<>();
-
-		String tcpGeckoSourceRepositoryURL = "https://github.com/BullyWiiPlaza/tcpgecko/";
-		String tcpGeckoMasterRepositoryURL = tcpGeckoSourceRepositoryURL + "blob/master/";
+		val threadPoolSize = getProcessorCount();
+		val pool = newFixedThreadPool(threadPoolSize * 2);
+		val completionService = new ExecutorCompletionService<String>(pool);
+		val tasks = new ArrayList<Future<String>>();
 
 		tasks.add(completionService.submit(() ->
 		{
-			String homeBrewLauncherDownloadURL = "https://github.com/dimok789/homebrew_launcher/releases/download/1.4/homebrew_launcher.v1.4.zip";
-			Path downloadedHomeBrewLauncherArchive = DownloadingUtilities.download(homeBrewLauncherDownloadURL);
-			Files.move(downloadedHomeBrewLauncherArchive, SD_CARD_DIRECTORY.resolve(downloadedHomeBrewLauncherArchive), StandardCopyOption.REPLACE_EXISTING);
-			downloadedHomeBrewLauncherArchive = SD_CARD_DIRECTORY.resolve(downloadedHomeBrewLauncherArchive);
-			Zipping.extract(downloadedHomeBrewLauncherArchive.toString(), SD_CARD_DIRECTORY.toString());
-			Files.delete(downloadedHomeBrewLauncherArchive);
+			val temporaryFilePath = download(HOME_BREW_LAUNCHER_DOWNLOAD_URL);
+			var downloadedHomeBrewLauncherArchive = temporaryFilePath.getFilePath();
+			move(downloadedHomeBrewLauncherArchive, SD_CARD_DIRECTORY.resolve(temporaryFilePath.getOriginalFileName()), REPLACE_EXISTING);
+			downloadedHomeBrewLauncherArchive = SD_CARD_DIRECTORY.resolve(temporaryFilePath.getOriginalFileName());
+			extract(downloadedHomeBrewLauncherArchive.toString(), SD_CARD_DIRECTORY.toString());
+			delete(downloadedHomeBrewLauncherArchive);
 
 			return null;
 		}));
 
 		tasks.add(completionService.submit(() ->
 		{
-			String jGeckoUURL = "https://github.com/BullyWiiPlaza/JGeckoU/blob/master/JGecko%20U.jar";
-			Path downloadedJGeckoU = DownloadingUtilities.downloadRaw(jGeckoUURL);
-			Files.move(downloadedJGeckoU, jGeckoUDirectory.resolve(downloadedJGeckoU.getFileName()), StandardCopyOption.REPLACE_EXISTING);
+			downloadRAWAndMove(jGeckoUDirectory, J_GECKO_U_URL);
 
 			return null;
 		}));
 
 		tasks.add(completionService.submit(() ->
 		{
-			String iconURL = tcpGeckoMasterRepositoryURL + "meta/icon.png";
-			Path iconFile = DownloadingUtilities.downloadRaw(iconURL);
-			Files.move(iconFile, tcpGeckoFolder.resolve(iconFile.getFileName()), StandardCopyOption.REPLACE_EXISTING);
+			downloadRAWAndMove(tcpGeckoFolder, ICON_URL);
 
 			return null;
 		}));
 
 		tasks.add(completionService.submit(() ->
 		{
-			String metaXML = tcpGeckoMasterRepositoryURL + "meta/meta.xml";
-			Path metaXMLFilePath = DownloadingUtilities.downloadRaw(metaXML);
-			Files.move(metaXMLFilePath, tcpGeckoFolder.resolve(metaXMLFilePath.getFileName()), StandardCopyOption.REPLACE_EXISTING);
+			downloadRAWAndMove(tcpGeckoFolder, META_XML);
 
 			return null;
 		}));
 
-		/*tasks.add(completionService.submit(() ->
+		tasks.add(completionService.submit(() ->
 		{
-			Path codeHandlerBinaries;
-
-			try
-			{
-				// Prioritize CosmoCortney's website because it's the most up-to-date
-				codeHandlerBinaries = DownloadingUtilities.download("http://cosmocortney.ddns.net/wiiu_tools/codehandler.bin");
-			} catch (Exception exception)
-			{
-				// As a fallback use my GitHub
-				codeHandlerBinaries = DownloadingUtilities.downloadRaw(tcpGeckoMasterRepositoryURL + "codehandler.bin");
-			}
-
-			Files.move(codeHandlerBinaries, tcpGeckoFolder.resolve(codeHandlerBinaries.getFileName()));
+			val temporaryFilePath = downloadRAW(BROWSER_EXPLOIT_PAYLOAD);
+			val downloadedPayloadArchive = temporaryFilePath.getFilePath();
+			extract(downloadedPayloadArchive.toString(), wiiUDirectory.toString());
+			delete(downloadedPayloadArchive);
 
 			return null;
-		}));*/
+		}));
 
 		tasks.add(completionService.submit(() ->
 		{
-			String tcpGeckoInstaller = tcpGeckoMasterRepositoryURL + "tcpgecko.elf";
-			Path downloadedTCPGeckoInstaller = DownloadingUtilities.downloadRaw(tcpGeckoInstaller);
-			Files.move(downloadedTCPGeckoInstaller, tcpGeckoFolder.resolve(downloadedTCPGeckoInstaller.getFileName()), StandardCopyOption.REPLACE_EXISTING);
+			downloadRAWAndMove(tcpGeckoFolder, TCP_GECKO_INSTALLER_URL);
 
 			return null;
 		}));
 
 		// Wait for all tasks to finish
-		int tasksCount = tasks.size();
-		for (int tasksIndex = 0; tasksIndex < tasksCount; tasksIndex++)
+		val tasksCount = tasks.size();
+		for (var tasksIndex = 0; tasksIndex < tasksCount; tasksIndex++)
 		{
-			completionService.take().get();
+			val future = completionService.take();
+			future.get();
 		}
 
 		pool.shutdown();
+	}
+
+	private static void downloadRAWAndMove(Path targetDirectory, String downloadURL) throws IOException
+	{
+		val temporaryFilePath = downloadRAW(downloadURL);
+		val downloadedFile = temporaryFilePath.getFilePath();
+		val destinationFilePath = targetDirectory.resolve(temporaryFilePath.getOriginalFileName());
+		move(downloadedFile, destinationFilePath, REPLACE_EXISTING);
+	}
+
+	private static int getProcessorCount()
+	{
+		val runtime = getRuntime();
+		return runtime.availableProcessors();
 	}
 }

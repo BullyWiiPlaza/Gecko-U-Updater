@@ -1,90 +1,76 @@
 package com.wiiudev.gecko.updater.swing;
 
-import net.samuelcampos.usbdrivedectector.USBDeviceDetectorManager;
-import net.samuelcampos.usbdrivedectector.USBStorageDevice;
+import lombok.val;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DrivesTableManager
+import static com.wiiudev.gecko.updater.swing.JTableUtilities.*;
+import static java.io.File.listRoots;
+import static javax.swing.SwingUtilities.invokeLater;
+import static javax.swing.filechooser.FileSystemView.getFileSystemView;
+
+class DrivesTableManager
 {
+	private static final String[] COLUMN_HEADER_NAMES = new String[]{"Display Name", "Type Description"};
+
 	private JTable table;
 	private List<FileSystemDrive> fileSystemDrives;
 
-	public DrivesTableManager(JTable table)
+	DrivesTableManager(JTable table)
 	{
 		this.table = table;
-		DefaultTableModel model = JTableUtilities.getDefaultTableModel();
+		val model = getDefaultTableModel();
 		table.setModel(model);
 		fileSystemDrives = new ArrayList<>();
 	}
 
-	public void configure()
+	void configure()
 	{
-		String[] columnHeaderNames = new String[]{"Display Name", "Type Description"};
-		JTableUtilities.configureTable(table, columnHeaderNames);
-		JTableUtilities.setSingleSelection(table);
+		configureTable(table, COLUMN_HEADER_NAMES);
+		setSingleSelection(table);
 	}
 
 	private void addRow(FileSystemDrive drive)
 	{
-		SwingUtilities.invokeLater(() ->
+		invokeLater(() ->
 		{
-			Object[] objects = new Object[]{drive.toString(), drive.getTypeDescription()};
-			DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
+			val objects = new Object[]{drive.toString(), drive.getTypeDescription()};
+			val tableModel = (DefaultTableModel) table.getModel();
 			tableModel.addRow(objects);
 		});
 	}
 
-	public void mountDrives()
+	void mountDrives()
 	{
 		fileSystemDrives.clear();
-		JTableUtilities.deleteAllRows(table);
+		deleteAllRows(table);
 
-		FileSystemView fileSystemView = FileSystemView.getFileSystemView();
-		File[] roots = File.listRoots();
+		val fileSystemView = getFileSystemView();
+		val roots = listRoots();
 
-		/*USBDeviceDetectorManager manager = new USBDeviceDetectorManager();
-		List<USBStorageDevice> usbStorageDevices = manager.getRemovableDevices();*/
-
-		for (File root : roots)
+		for (val root : roots)
 		{
-			String displayName = fileSystemView.getSystemDisplayName(root);
+			val displayName = fileSystemView.getSystemDisplayName(root);
 
 			if (!displayName.isEmpty())
 			{
-				FileSystemDrive drive = new FileSystemDrive(root);
+				val drive = new FileSystemDrive(root);
 				fileSystemDrives.add(drive);
 				addRow(drive);
 			}
 		}
 	}
 
-	/*private boolean isDisplayNameContained(String displayName, List<USBStorageDevice> usbStorageDevices)
+	FileSystemDrive getSelectedDrive()
 	{
-		for (USBStorageDevice usbStorageDevice : usbStorageDevices)
-		{
-			String currentDisplayName = usbStorageDevice.getSystemDisplayName();
-			if (currentDisplayName.equals(displayName))
-			{
-				return true;
-			}
-		}
-
-		return false;
-	}*/
-
-	public FileSystemDrive getSelectedDrive()
-	{
-		int selectedRow = table.getSelectedRow();
+		val selectedRow = table.getSelectedRow();
 		return fileSystemDrives.get(selectedRow);
 	}
 
-	public boolean isDriveSelected()
+	boolean isDriveSelected()
 	{
 		return table.getSelectedRow() != -1;
 	}

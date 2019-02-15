@@ -1,19 +1,30 @@
 package com.wiiudev.gecko.updater.swing;
 
-import com.wiiudev.gecko.updater.*;
-import com.wiiudev.gecko.updater.utilities.*;
+import lombok.val;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
+
+import static com.wiiudev.gecko.updater.GeckoUpdater.SD_CARD_DIRECTORY;
+import static com.wiiudev.gecko.updater.GeckoUpdater.downloadFiles;
+import static com.wiiudev.gecko.updater.utilities.StackTraceUtilities.handleException;
+import static com.wiiudev.gecko.updater.utilities.WindowUtilities.setWindowIconImage;
+import static com.wiiudev.gecko.updater.utilities.WindowsDrivesUtilities.getDrives;
+import static java.lang.Thread.sleep;
+import static java.nio.file.Files.isDirectory;
+import static javax.swing.JOptionPane.*;
+import static javax.swing.SwingUtilities.invokeLater;
+import static org.apache.commons.io.FileUtils.copyDirectory;
+import static org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS;
 
 public class GeckoUUpdaterGUI extends JFrame
 {
+	private static final String FORCED_FORMATTING = "FAT32";
+	private static final String GECKO_U_UPDATER_URL = "https://github.com/BullyWiiPlaza/Gecko-U-Updater";
+
 	private JPanel rootPanel;
 	private JButton downloadFilesButton;
 	private JButton mountDrivesButton;
@@ -39,23 +50,23 @@ public class GeckoUUpdaterGUI extends JFrame
 
 		downloadFilesButton.addActionListener(actionEvent ->
 		{
-			String buttonText = downloadFilesButton.getText();
+			val buttonText = downloadFilesButton.getText();
 			downloadFilesButton.setText("Downloading...");
 			downloadingFiles = true;
-			final boolean[] processSucceeded = {true};
+			val processSucceeded = new boolean[]{true};
 
 			new SwingWorker<String, String>()
 			{
 				@Override
-				protected String doInBackground() throws Exception
+				protected String doInBackground()
 				{
 					try
 					{
-						GeckoUpdater.downloadFiles();
+						downloadFiles();
 					} catch (Exception exception)
 					{
 						processSucceeded[0] = false;
-						StackTraceUtilities.handleException(rootPane, exception);
+						handleException(rootPane, exception);
 					}
 
 					return null;
@@ -66,10 +77,10 @@ public class GeckoUUpdaterGUI extends JFrame
 				{
 					if (processSucceeded[0])
 					{
-						JOptionPane.showMessageDialog(rootPanel,
+						showMessageDialog(rootPanel,
 								"Files successfully downloaded!",
 								"Success",
-								JOptionPane.INFORMATION_MESSAGE);
+								INFORMATION_MESSAGE);
 					}
 
 					downloadFilesButton.setText(buttonText);
@@ -80,31 +91,30 @@ public class GeckoUUpdaterGUI extends JFrame
 
 		transferButton.addActionListener(actionEvent ->
 		{
-			Path sourcePath = GeckoUpdater.SD_CARD_DIRECTORY;
-			FileSystemDrive fileSystemDrive = tableManager.getSelectedDrive();
-			String root = fileSystemDrive.getRoot();
-			boolean shouldTransfer = reconsiderTransfer(root);
+			val fileSystemDrive = tableManager.getSelectedDrive();
+			val root = fileSystemDrive.getRoot();
+			val shouldTransfer = reconsiderTransfer(root);
 
 			if (shouldTransfer)
 			{
-				Path targetPath = Paths.get(fileSystemDrive.getRoot());
-				final boolean[] processSucceeded = {true};
-				String buttonText = transferButton.getText();
+				val targetPath = Paths.get(fileSystemDrive.getRoot());
+				val processSucceeded = new boolean[]{true};
+				val buttonText = transferButton.getText();
 				transferringFiles = true;
 				transferButton.setText("Transferring...");
 
 				new SwingWorker<String, String>()
 				{
 					@Override
-					protected String doInBackground() throws Exception
+					protected String doInBackground()
 					{
 						try
 						{
-							FileUtilities.copyDirectory(sourcePath, targetPath);
+							copyDirectory(SD_CARD_DIRECTORY.toFile(), targetPath.toFile());
 						} catch (IOException exception)
 						{
 							processSucceeded[0] = false;
-							StackTraceUtilities.handleException(rootPane, exception);
+							handleException(rootPane, exception);
 						}
 
 						return null;
@@ -115,10 +125,8 @@ public class GeckoUUpdaterGUI extends JFrame
 					{
 						if (processSucceeded[0])
 						{
-							JOptionPane.showMessageDialog(rootPanel,
-									"Files successfully transferred!",
-									"Success",
-									JOptionPane.INFORMATION_MESSAGE);
+							showMessageDialog(rootPanel, "Files successfully transferred!",
+									"Success", INFORMATION_MESSAGE);
 						}
 
 						transferringFiles = false;
@@ -135,36 +143,34 @@ public class GeckoUUpdaterGUI extends JFrame
 
 	private boolean reconsiderTransfer(String root)
 	{
-		if (OperatingSystemUtilities.isWindows())
+		if (IS_OS_WINDOWS)
 		{
 			try
 			{
-				List<WindowsDrivesUtilities.Drive> drives = WindowsDrivesUtilities.getDrives();
-				String forcedFormatting = "FAT32";
+				val drives = getDrives();
 
-				for (WindowsDrivesUtilities.Drive drive : drives)
+				for (val drive : drives)
 				{
-					String currentDriveRoot = drive.root.toString();
+					val currentDriveRoot = drive.root.toString();
 
 					if (currentDriveRoot.equals(root))
 					{
-						String currentFileSystem = drive.fileSystem;
+						val currentFileSystem = drive.fileSystem;
 
-						if (!currentFileSystem.equals(forcedFormatting))
+						if (!currentFileSystem.equals(FORCED_FORMATTING))
 						{
-							Object[] options = {"Yes", "No"};
-							int selectedOption = JOptionPane.showOptionDialog(this,
-									"Windows has detected that the drive is not formatted as " + forcedFormatting + ".\n" +
-											"The Wii U's SD card has to be formatted as " + forcedFormatting + " to be recognized, therefore this cannot be a Wii U SD card.\n" +
+							val options = new String[]{"Yes", "No"};
+							val selectedOption = showOptionDialog(this,
+									"Windows has detected that the drive is not formatted as "
+											+ FORCED_FORMATTING + ".\n" +
+											"The Wii U's SD card has to be formatted as " + FORCED_FORMATTING
+											+ " to be recognized,\n" +
+											"therefore this cannot be a Wii U SD card.\n" +
 											"Are you sure you still want to copy the files over?",
 									"Continue?",
-									JOptionPane.YES_NO_CANCEL_OPTION,
-									JOptionPane.QUESTION_MESSAGE,
-									null,
-									options,
-									null);
+									YES_NO_CANCEL_OPTION, QUESTION_MESSAGE, null, options, null);
 
-							if (selectedOption != JOptionPane.YES_OPTION)
+							if (selectedOption != YES_OPTION)
 							{
 								return false;
 							}
@@ -175,10 +181,11 @@ public class GeckoUUpdaterGUI extends JFrame
 				}
 			} catch (Error error)
 			{
-				JOptionPane.showMessageDialog(this,
-						"Please keep the DLLs in the same directory as this application for advanced drive detection on Windows.",
+				showMessageDialog(this,
+						"Please keep the DLLs in the same directory as this application " +
+								"for advanced drive detection on Windows.",
 						error.getMessage(),
-						JOptionPane.ERROR_MESSAGE);
+						ERROR_MESSAGE);
 			}
 		}
 
@@ -189,40 +196,40 @@ public class GeckoUUpdaterGUI extends JFrame
 	{
 		try
 		{
-			Desktop desktop = Desktop.getDesktop();
-			URI uri = new URI("https://github.com/BullyWiiPlaza/Gecko-U-Updater");
+			val desktop = Desktop.getDesktop();
+			val uri = new URI(GECKO_U_UPDATER_URL);
 			desktop.browse(uri);
 		} catch (Exception exception)
 		{
-			StackTraceUtilities.handleException(null, exception);
+			handleException(null, exception);
 		}
 	}
 
 	private void startComponentsAvailabilitySetter()
 	{
-		Thread thread = new Thread(() ->
+		val thread = new Thread(() ->
 		{
 			while (!isShowing())
 			{
 				try
 				{
-					Thread.sleep(10);
+					sleep(10);
 				} catch (Exception exception)
 				{
-					StackTraceUtilities.handleException(rootPane, exception);
+					handleException(rootPane, exception);
 				}
 			}
 
 			while (isShowing())
 			{
-				SwingUtilities.invokeLater(this::setComponentsAvailability);
+				invokeLater(this::setComponentsAvailability);
 
 				try
 				{
-					Thread.sleep(50);
+					sleep(50);
 				} catch (Exception exception)
 				{
-					StackTraceUtilities.handleException(rootPane, exception);
+					handleException(rootPane, exception);
 				}
 			}
 		});
@@ -233,8 +240,8 @@ public class GeckoUUpdaterGUI extends JFrame
 
 	private void setComponentsAvailability()
 	{
-		boolean filesDownloaded = Files.isDirectory(GeckoUpdater.SD_CARD_DIRECTORY);
-		boolean driveSelected = tableManager.isDriveSelected();
+		val filesDownloaded = isDirectory(SD_CARD_DIRECTORY);
+		val driveSelected = tableManager.isDriveSelected();
 		transferButton.setEnabled(filesDownloaded && driveSelected
 				&& !transferringFiles && !downloadingFiles && !mountingDrives);
 		downloadFilesButton.setEnabled(!downloadingFiles);
@@ -243,14 +250,14 @@ public class GeckoUUpdaterGUI extends JFrame
 
 	private void mountDrivesAsynchronously()
 	{
-		String buttonText = mountDrivesButton.getText();
+		val buttonText = mountDrivesButton.getText();
 		mountDrivesButton.setText("Mounting...");
 		mountingDrives = true;
 
 		new SwingWorker<String, String>()
 		{
 			@Override
-			protected String doInBackground() throws Exception
+			protected String doInBackground()
 			{
 				tableManager.mountDrives();
 
@@ -269,10 +276,10 @@ public class GeckoUUpdaterGUI extends JFrame
 	private void setFrameProperties()
 	{
 		add(rootPanel);
-		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setLocationRelativeTo(null);
 		setSize(450, 250);
-		setTitle("Gecko U Updater");
-		WindowUtilities.setIconImage(this);
+		setTitle("Gecko U Updater [02/15/2019]");
+		setWindowIconImage(this);
 	}
 }

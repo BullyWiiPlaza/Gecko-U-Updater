@@ -1,47 +1,50 @@
 package com.wiiudev.gecko.updater.utilities;
 
-import org.apache.commons.io.FilenameUtils;
+import lombok.val;
+import lombok.var;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.net.URLDecoder;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.Random;
+
+import static java.net.URLDecoder.decode;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.Files.copy;
+import static java.nio.file.Files.createTempFile;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static org.apache.commons.io.FilenameUtils.getBaseName;
+import static org.apache.commons.io.FilenameUtils.getExtension;
 
 public class DownloadingUtilities
 {
-	public static Path downloadRaw(String downloadURL) throws IOException
+	public static TemporaryFilePath downloadRAW(String downloadURL) throws IOException
 	{
 		return download(downloadURL + "?raw=true");
 	}
 
-	public static Path download(String downloadURL) throws IOException
+	public static TemporaryFilePath download(String downloadURL) throws IOException
 	{
-		URL website = new URL(downloadURL);
-		String fileName = getFileName(downloadURL);
+		val website = new URL(downloadURL);
+		val fileName = getFileName(downloadURL);
 
-		try (InputStream inputStream = website.openStream())
+		try (val inputStream = website.openStream())
 		{
-			Path downloadedFilePath = Paths.get(RandomStringUtilities.getTemporaryDirectory() + File.separator + fileName);
-			Files.copy(inputStream, downloadedFilePath, StandardCopyOption.REPLACE_EXISTING);
+			val baseName = getBaseName(fileName);
+			val extension = getExtension(fileName);
+			val temporaryFile = createTempFile(baseName, extension);
+			copy(inputStream, temporaryFile, REPLACE_EXISTING);
 
-			return downloadedFilePath;
+			return new TemporaryFilePath(temporaryFile, fileName);
 		}
 	}
 
 	private static String getFileName(String downloadURL) throws UnsupportedEncodingException
 	{
-		String baseName = FilenameUtils.getBaseName(downloadURL);
-		String extension = FilenameUtils.getExtension(downloadURL);
-		String fileName = baseName + "." + extension;
+		val baseName = getBaseName(downloadURL);
+		val extension = getExtension(downloadURL);
+		var fileName = baseName + "." + extension;
 
-		int questionMarkIndex = fileName.indexOf("?");
+		val questionMarkIndex = fileName.indexOf("?");
 		if (questionMarkIndex != -1)
 		{
 			fileName = fileName.substring(0, questionMarkIndex);
@@ -49,6 +52,6 @@ public class DownloadingUtilities
 
 		fileName = fileName.replaceAll("-", "");
 
-		return URLDecoder.decode(fileName, "UTF-8");
+		return decode(fileName, UTF_8.name());
 	}
 }

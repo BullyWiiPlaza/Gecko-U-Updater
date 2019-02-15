@@ -1,13 +1,17 @@
 package com.wiiudev.gecko.updater.utilities;
 
+import lombok.val;
+
 import javax.swing.*;
+
+import static javax.swing.JOptionPane.*;
 
 public class StackTraceUtilities
 {
 	private static String toString(Exception exception)
 	{
-		StringBuilder stringBuilder = new StringBuilder(exception.toString());
-		for (StackTraceElement stackTraceElement : exception.getStackTrace())
+		val stringBuilder = new StringBuilder(exception.toString());
+		for (val stackTraceElement : exception.getStackTrace())
 		{
 			stringBuilder.append("\n\tat ");
 			stringBuilder.append(stackTraceElement);
@@ -18,9 +22,6 @@ public class StackTraceUtilities
 
 	public static void handleException(JRootPane rootPane, Exception exception)
 	{
-		JOptionPane.showMessageDialog(rootPane,
-				toString(exception),
-				"Error",
-				JOptionPane.ERROR_MESSAGE);
+		showMessageDialog(rootPane, toString(exception), "Error", ERROR_MESSAGE);
 	}
 }

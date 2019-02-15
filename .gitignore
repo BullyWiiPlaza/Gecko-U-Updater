@@ -1,2 +1,4 @@
-# Ignore compiled classes
 /target
+/.idea
+/Downloaded
+/Gecko U Updater.iml

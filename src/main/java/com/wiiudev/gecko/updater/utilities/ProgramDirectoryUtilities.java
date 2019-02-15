@@ -1,5 +1,7 @@
 package com.wiiudev.gecko.updater.utilities;
 
+import lombok.val;
+
 import java.io.File;
 import java.net.URISyntaxException;
 
@@ -16,7 +18,7 @@ public class ProgramDirectoryUtilities
 
 	private static boolean runningFromJAR()
 	{
-		String jarName = getJarName();
+		val jarName = getJarName();
 		return jarName.contains(".jar");
 	}
 

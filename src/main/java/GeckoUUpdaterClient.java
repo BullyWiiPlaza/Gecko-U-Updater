@@ -1,19 +1,19 @@
 import com.wiiudev.gecko.updater.swing.GeckoUUpdaterGUI;
-import net.samuelcampos.usbdrivedectector.USBDeviceDetectorManager;
-import net.samuelcampos.usbdrivedectector.USBStorageDevice;
+import lombok.val;
 
-import javax.swing.*;
-import java.util.List;
+import static javax.swing.SwingUtilities.invokeLater;
+import static javax.swing.UIManager.getSystemLookAndFeelClassName;
+import static javax.swing.UIManager.setLookAndFeel;
 
 public class GeckoUUpdaterClient
 {
 	public static void main(String[] arguments) throws Exception
 	{
-		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		setLookAndFeel(getSystemLookAndFeelClassName());
 
-		SwingUtilities.invokeLater(() ->
+		invokeLater(() ->
 		{
-			GeckoUUpdaterGUI updaterGUI = new GeckoUUpdaterGUI();
+			val updaterGUI = new GeckoUUpdaterGUI();
 			updaterGUI.setVisible(true);
 		});
 	}
