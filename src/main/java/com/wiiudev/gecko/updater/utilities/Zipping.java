@@ -1,14 +1,17 @@
 package com.wiiudev.gecko.updater.utilities;
 
 import lombok.val;
-import net.lingala.zip4j.core.ZipFile;
-import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.ZipFile;
+
+import java.io.IOException;
 
 public class Zipping
 {
-	public static void extract(String inputArchive, String outputDirectory) throws ZipException
+	public static void extract(String inputArchive, String outputDirectory) throws IOException
 	{
-		val zipFile = new ZipFile(inputArchive);
-		zipFile.extractAll(outputDirectory);
+		try (val zipFile = new ZipFile(inputArchive))
+		{
+			zipFile.extractAll(outputDirectory);
+		}
 	}
 }
