@@ -232,9 +232,8 @@ public class GeckoUUpdaterGUI extends JFrame
 					handleException(rootPane, exception);
 				}
 			}
-		});
+		}, "Components Availability Setter");
 
-		thread.setName("Components Availability Setter");
 		thread.start();
 	}
 
@@ -279,7 +278,7 @@ public class GeckoUUpdaterGUI extends JFrame
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setLocationRelativeTo(null);
 		setSize(450, 250);
-		setTitle("Gecko U Updater [02/15/2019]");
+		setTitle("Gecko U Updater [09/25/2022]");
 		setWindowIconImage(this);
 	}
 }
