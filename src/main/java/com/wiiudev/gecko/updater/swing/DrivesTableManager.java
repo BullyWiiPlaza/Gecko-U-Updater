@@ -16,8 +16,8 @@ class DrivesTableManager
 {
 	private static final String[] COLUMN_HEADER_NAMES = new String[]{"Display Name", "Type Description"};
 
-	private JTable table;
-	private List<FileSystemDrive> fileSystemDrives;
+	private final JTable table;
+	private final List<FileSystemDrive> fileSystemDrives;
 
 	DrivesTableManager(JTable table)
 	{

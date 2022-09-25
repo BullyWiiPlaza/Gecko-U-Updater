@@ -41,7 +41,7 @@ public class WindowsDrivesUtilities
 		}
 	}
 
-	private static <T extends Enum<T> & HasNativeValue> T fromNative(Class<T> clazz, int value)
+	private static <T extends Enum<T> & HasNativeValue> T fromNative(@SuppressWarnings("SameParameterValue") final Class<T> clazz, final int value)
 	{
 		for (val enumConstant : clazz.getEnumConstants())
 		{

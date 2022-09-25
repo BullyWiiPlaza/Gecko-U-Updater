@@ -32,7 +32,7 @@ public class GeckoUUpdaterGUI extends JFrame
 	private JTable drivesTable;
 	private JButton informationButton;
 
-	private DrivesTableManager tableManager;
+	private final DrivesTableManager tableManager;
 	private boolean downloadingFiles;
 	private boolean mountingDrives;
 	private boolean transferringFiles;
@@ -213,6 +213,7 @@ public class GeckoUUpdaterGUI extends JFrame
 			{
 				try
 				{
+					//noinspection BusyWait
 					sleep(10);
 				} catch (Exception exception)
 				{
@@ -226,6 +227,7 @@ public class GeckoUUpdaterGUI extends JFrame
 
 				try
 				{
+					//noinspection BusyWait
 					sleep(50);
 				} catch (Exception exception)
 				{

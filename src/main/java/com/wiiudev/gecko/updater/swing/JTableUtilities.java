@@ -92,7 +92,7 @@ class JTableUtilities
 
 	private static class HeaderRenderer implements TableCellRenderer
 	{
-		private DefaultTableCellRenderer renderer;
+		private final DefaultTableCellRenderer renderer;
 
 		HeaderRenderer(JTable table)
 		{

@@ -9,7 +9,7 @@ public class FileSystemDrive
 {
 	private static final FileSystemView FILE_SYSTEM_VIEW = getFileSystemView();
 
-	private File file;
+	private final File file;
 
 	FileSystemDrive(File file)
 	{
