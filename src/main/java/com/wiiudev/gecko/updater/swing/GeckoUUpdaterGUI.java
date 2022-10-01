@@ -141,7 +141,7 @@ public class GeckoUUpdaterGUI extends JFrame
 		startComponentsAvailabilitySetter();
 	}
 
-	private boolean reconsiderTransfer(String root)
+	private boolean reconsiderTransfer(final String root)
 	{
 		if (IS_OS_WINDOWS)
 		{
@@ -179,13 +179,10 @@ public class GeckoUUpdaterGUI extends JFrame
 						break;
 					}
 				}
-			} catch (Error error)
+			} catch (final Throwable throwable)
 			{
-				showMessageDialog(this,
-						"Please keep the DLLs in the same directory as this application " +
-								"for advanced drive detection on Windows.",
-						error.getMessage(),
-						ERROR_MESSAGE);
+				throwable.printStackTrace();
+				handleException(rootPane, throwable);
 			}
 		}
 

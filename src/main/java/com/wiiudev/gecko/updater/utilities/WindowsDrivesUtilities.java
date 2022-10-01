@@ -8,11 +8,48 @@ import com.jacob.com.Variant;
 import lombok.val;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.apache.commons.io.FileUtils.readFileToByteArray;
+
 public class WindowsDrivesUtilities
 {
+	static
+	{
+		try
+		{
+			extractJacobDLL("jacob-1.18-x86.dll");
+			extractJacobDLL("jacob-1.18-x64.dll");
+		} catch (final Exception exception)
+		{
+			exception.printStackTrace();
+		}
+	}
+
+	private static void extractJacobDLL(final String relativeClasspathResourceFilePath) throws Exception
+	{
+		val fileContentsByteArray = readClasspathResourceToByteArray(relativeClasspathResourceFilePath);
+		val workingDirectory = System.getProperty("user.dir");
+		val destinationFilePath = Paths.get(workingDirectory).resolve(relativeClasspathResourceFilePath);
+		Files.write(destinationFilePath, fileContentsByteArray);
+	}
+
+	private static byte[] readClasspathResourceToByteArray(final String relativeClasspathResourceFilePath) throws Exception
+	{
+		val url = WindowsDrivesUtilities.class.getClassLoader().getResource(relativeClasspathResourceFilePath);
+		if (url == null)
+		{
+			throw new IOException("Classpath resource " + relativeClasspathResourceFilePath + " not found");
+		}
+
+		val classpathFile = new File(url.toURI());
+		return readFileToByteArray(classpathFile);
+	}
+
 	public interface HasNativeValue
 	{
 		int getNativeValue();
@@ -30,7 +67,7 @@ public class WindowsDrivesUtilities
 
 		public final int nativeValue;
 
-		DriveTypeEnum(int nativeValue)
+		DriveTypeEnum(final int nativeValue)
 		{
 			this.nativeValue = nativeValue;
 		}
@@ -117,12 +154,12 @@ public class WindowsDrivesUtilities
 		}
 	}
 
-	private static void closeQuietly(JacobObject jacobObject)
+	private static void closeQuietly(final JacobObject jacobObject)
 	{
 		try
 		{
 			jacobObject.safeRelease();
-		} catch (Exception exception)
+		} catch (final Exception exception)
 		{
 			exception.printStackTrace();
 		}
