@@ -28,7 +28,7 @@ public class GeckoUpdater
 
 	private static final String BROWSER_EXPLOIT_PAYLOAD = "https://static.wiidatabase.de/JSTypeHax-Payload.zip";
 	private static final String HOME_BREW_LAUNCHER_DOWNLOAD_URL = "https://github.com/dimok789/homebrew_launcher/releases/download/1.4/homebrew_launcher.v1.4.zip";
-	private static final String J_GECKO_U_URL = "https://github.com/BullyWiiPlaza/JGeckoU/blob/master/JGecko%20U.jar";
+	private static final String J_GECKO_U_URL = "https://github.com/BullyWiiPlaza/JGeckoU/releases/download/latest-version/JGecko.U.jar";
 	private static final String TCP_GECKO_MASTER_REPOSITORY_URL = "https://github.com/BullyWiiPlaza/tcpgecko/blob/master/";
 	private static final String ICON_URL = TCP_GECKO_MASTER_REPOSITORY_URL + "meta/icon.png";
 	private static final String META_XML = TCP_GECKO_MASTER_REPOSITORY_URL + "meta/meta.xml";
@@ -114,7 +114,8 @@ public class GeckoUpdater
 	{
 		val temporaryFilePath = downloadRAW(downloadURL);
 		val downloadedFile = temporaryFilePath.getFilePath();
-		val destinationFilePath = targetDirectory.resolve(temporaryFilePath.getOriginalFileName());
+		val originalFileName = temporaryFilePath.getOriginalFileName();
+		val destinationFilePath = targetDirectory.resolve(originalFileName);
 		move(downloadedFile, destinationFilePath, REPLACE_EXISTING);
 	}
 

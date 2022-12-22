@@ -277,7 +277,7 @@ public class GeckoUUpdaterGUI extends JFrame
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setLocationRelativeTo(null);
 		setSize(450, 250);
-		setTitle("Gecko U Updater [09/25/2022]");
+		setTitle("Gecko U Updater [12/22/2022]");
 		setWindowIconImage(this);
 	}
 }
