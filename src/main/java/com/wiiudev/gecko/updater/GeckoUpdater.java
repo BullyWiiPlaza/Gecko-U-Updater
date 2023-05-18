@@ -86,7 +86,7 @@ public class GeckoUpdater
 		{
 			val temporaryFilePath = downloadRAW(BROWSER_EXPLOIT_PAYLOAD);
 			val downloadedPayloadArchive = temporaryFilePath.getFilePath();
-			extract(downloadedPayloadArchive.toString(), wiiUDirectory.toString());
+			extract(downloadedPayloadArchive.toString(), SD_CARD_DIRECTORY.toString());
 			delete(downloadedPayloadArchive);
 
 			return null;
